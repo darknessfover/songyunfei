@@ -1,0 +1,97 @@
+C51 COMPILER V9.01   QAQ                                                                   08/11/2018 11:49:21 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE QAQ
+OBJECT MODULE PLACED IN qaq.OBJ
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE qaq.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <reg52.h>
+   2          
+   3          #define MAX 0x50   //定时上限定义
+   4          #define MIN 0x00   //定时下限定义
+   5          #define TIMELINE 11         //时间分频常数
+   6          #define TRUE  1
+   7          #define FALSE 0             //标志位常数
+   8          
+   9          unsigned int TimeCounter;
+  10          bit ArrowFlg = 0;         //方向标志位
+  11          unsigned char upCounter,downCounter;    //增加计数器和减少计数器
+  12          
+  13          sbit LED=P2^0;
+  14          
+  15          //T0的中断服务子函数
+  16          void T0Deal() interrupt 1 using 0
+  17          {
+  18   1              TH0=0xf1;
+  19   1              TL0=0xf1;
+  20   1              TR0=1;
+  21   1              TimeCounter++;  //定时计数器增加
+  22   1              if(TimeCounter == TIMELINE)
+  23   1              {
+  24   2                      if((upCounter == MAX)&&(downCounter == MIN))  //计数方向标志位切换
+  25   2          {
+  26   3            ArrowFlg = FALSE;
+  27   3          }
+  28   2                      if((upCounter == MIN)&&(downCounter == MAX))
+  29   2          {
+  30   3            ArrowFlg= TRUE;
+  31   3          }
+  32   2                      if(ArrowFlg == 1)   //如果是增加计数
+  33   2          {
+  34   3            upCounter++;
+  35   3            downCounter--;
+  36   3          }
+  37   2                      else               //如果是减少计数
+  38   2          {
+  39   3            upCounter--;
+  40   3            downCounter++;
+  41   3          }
+  42   2                      TimeCounter=0;
+  43   2              }
+  44   1      }
+  45          //延时函数
+  46          void Delay(unsigned int i)
+  47          {
+  48   1              unsigned int j;
+  49   1              while(i--)
+  50   1              {
+  51   2                      for(j=0;j<32;j++);     //延时
+  52   2              }
+  53   1      }
+  54          
+  55          void main()
+C51 COMPILER V9.01   QAQ                                                                   08/11/2018 11:49:21 PAGE 2   
+
+  56          {
+  57   1              upCounter = MIN;
+  58   1              downCounter = MAX;     //计数器初始化
+  59   1              TMOD = 0x01;          //设置定时器工作方式
+  60   1              TH0 = 0xF0;
+  61   1              TL0 = 0xF0 ;          //T0初始化值
+  62   1              EA = 1;
+  63   1              ET0 = 1;              //开中断
+  64   1              TR0 = 1;              //启动T0
+  65   1              while(1)
+  66   1              {
+  67   2                      LED=0;            //输出变化的PWM波形
+  68   2                      Delay(downCounter);   
+  69   2                      LED=1;
+  70   2                      Delay(upCounter);
+  71   2              }
+  72   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    143    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
